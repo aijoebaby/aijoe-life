@@ -1,0 +1,29 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="theme-color" content="#222222" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AIJOE - Your Voice Assistant</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="stylesheet" href="style.css" />
+  <script>
+    if ('serviceWorker' in navigator) navigator.serviceWorker.register('service-worker.js');
+  </script>
+</head>
+<body>
+  <div class="container">
+    <div class="avatar-container">
+      <img src="joey-avatar.png" alt="Joey Avatar" class="avatar"/>
+      <h1>AIJOE</h1>
+    </div>
+    <p>Hi! I'm AIJOE, your voice-first assistant. Tap the mic and ask me anything.</p>
+    <button id="micBtn">🎤 Talk to AIJOE</button>
+    <input type="text" id="textInput" placeholder="Type your question..." />
+    <button onclick="sendText()">Send</button>
+    <div id="response"></div>
+  </div>
+  <script src="script.js"></script>
+</body>
+</html>
