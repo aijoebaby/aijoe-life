@@ -1,0 +1,2 @@
+# aijoe-life
+rust
