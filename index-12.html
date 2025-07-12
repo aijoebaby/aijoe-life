@@ -1,0 +1,103 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AIJOE - Your Universal AI Buddy</title>
+  <link rel="manifest" href="/manifest.json" />
+  <style>
+    body { font-family: 'Segoe UI', Arial, sans-serif; margin: 0; background: #f7fafc; }
+    header { background: #0e2344; color: #fff; padding: 1.2em 0 0.8em 0; font-size: 2em; letter-spacing: 2px; border-radius: 0 0 24px 24px; box-shadow: 0 4px 12px #0002;}
+    .avatar-wrap { margin: 16px 0 12px 0; display:flex; justify-content:center; align-items:center; flex-direction:column;}
+    .avatar { width: 120px; border-radius: 50%; border: 6px solid #fff; box-shadow: 0 2px 8px #0002; position: relative;}
+    .mouth { position:absolute; left:50%; top:73%; width:34px; height:18px; background:#5f341a; border-radius:0 0 34px 34px; transform:translate(-50%,0) scaleY(1); transition:transform 0.18s; z-index:2; }
+    .mouth.talking { transform:translate(-50%,0) scaleY(2); background:#b57447;}
+    .big-btn { background:#2653f3; color:white; font-size:1.4em; border:none; border-radius:22px; padding:20px 30px; margin:18px auto 12px auto; display:block; box-shadow:0 6px 18px #2222; font-weight:bold; width:88%; letter-spacing:1px;}
+    .section-btns { display: flex; flex-wrap: wrap; justify-content: center; gap: 16px; margin-bottom:24px;}
+    .feature-btn { flex: 1 1 140px; min-width: 135px; background: #fff; border: 2px solid #e5e7eb; border-radius: 18px; box-shadow: 0 2px 8px #0001; padding: 20px 5px 14px 5px; display:flex; flex-direction:column; align-items:center; cursor:pointer; transition:.2s; font-size: 1em; }
+    .feature-btn:active, .feature-btn:hover { border-color:#2653f3; background: #e9f0fe;}
+    .feature-btn span { margin-top: 8px; }
+    .footer { margin-top:24px; font-size:0.97em; color:#7e868f;}
+    .hide { display: none; }
+    @media (max-width:600px){ .avatar{width:92px;} .feature-btn{font-size:0.93em;} .big-btn{font-size:1.05em;} }
+  </style>
+</head>
+<body>
+  <header>AIJOE <span style="font-size:0.5em;font-weight:300;">Beta</span></header>
+  <div class="avatar-wrap">
+    <div style="position:relative; display:inline-block;">
+      <img src="joey-avatar-app-2.png" class="avatar" id="joey" alt="Joey the Boston Terrier" />
+      <div id="mouth" class="mouth"></div>
+    </div>
+  </div>
+  <button class="big-btn" id="mic"><span style="font-size:1.2em;">🎤</span> Talk to Joey</button>
+
+  <div class="section-btns">
+    <div class="feature-btn" onclick="startSearch()"><span>🔍</span><span>Find Anything</span></div>
+    <div class="feature-btn" onclick="startReminders()"><span>⏰</span><span>Reminders</span></div>
+    <div class="feature-btn" onclick="getLocation()"><span>📍</span><span>GPS/Local</span></div>
+    <div class="feature-btn" onclick="triggerSOS()"><span>🚨</span><span>Emergency Help</span></div>
+    <div class="feature-btn" onclick="checkInMood()"><span>🧠</span><span>Mood/Health</span></div>
+    <div class="feature-btn" onclick="translate()"><span>🌎</span><span>Translator</span></div>
+    <div class="feature-btn" onclick="voiceMemo()"><span>🎙️</span><span>Voice Memo</span></div>
+    <div class="feature-btn" onclick="socialConnect()"><span>👫</span><span>Meetups/Social</span></div>
+    <div class="feature-btn" onclick="aiRecommend()"><span>✨</span><span>AI Suggest</span></div>
+    <div class="feature-btn" onclick="tellJoke()"><span>🤣</span><span>Joke/Fun</span></div>
+    <div class="feature-btn" onclick="weather()"><span>🌤️</span><span>Weather</span></div>
+    <div class="feature-btn" onclick="customizeJoey()"><span>🎨</span><span>Customize Joey</span></div>
+  </div>
+
+  <div class="footer">AIJOE will never sell your data • Your friendly AI assistant • <span id="year"></span></div>
+
+  <script>
+    document.getElementById('year').textContent = new Date().getFullYear();
+
+    // Mouth animation
+    const mouth = document.getElementById('mouth');
+    const synth = window.speechSynthesis;
+    function getVoice() {
+      const voices = synth.getVoices();
+      return voices.find(v => v.lang === "en-US" &&
+        (v.name.includes("Matthew") || v.name.includes("Guy") ||
+         v.name.includes("Joey") || v.name.toLowerCase().includes("male"))
+      ) || voices.find(v => v.lang === "en-US") || voices[0];
+    }
+    function say(text) {
+      const utter = new SpeechSynthesisUtterance(text);
+      utter.voice = getVoice();
+      utter.pitch = 1.0; utter.rate = 0.97;
+      utter.onstart = () => { mouth.classList.add('talking'); }
+      utter.onend = () => { mouth.classList.remove('talking'); }
+      synth.speak(utter);
+    }
+
+    window.onload = () => {
+      say("Yo! I'm Joey, your universal AI voice buddy. Tap any button, or just talk to me!");
+    };
+    document.getElementById('mic').onclick = () => {
+      say("I'm listening! What can I help you with?");
+    };
+
+    // Feature button demos (these would become real functions)
+    function startSearch(){ say("What would you like to find? Food, gas, ATMs, or something else?"); }
+    function startReminders(){ say("What should I remind you about, and when?"); }
+    function getLocation(){
+      if(navigator.geolocation){
+        navigator.geolocation.getCurrentPosition(pos => {
+          say(`You're at latitude ${pos.coords.latitude.toFixed(2)} and longitude ${pos.coords.longitude.toFixed(2)}.`);
+        });
+      }else{ say("Geolocation is not supported on this device."); }
+    }
+    function triggerSOS(){ say("Emergency contacts and local authorities have been notified."); }
+    function checkInMood(){ say("How are you feeling today? Tell me if you're happy, sad, or anything else."); }
+    function translate(){ say("Tell me what to translate, and which language."); }
+    function voiceMemo(){ say("Recording voice memo. What would you like to remember?"); }
+    function socialConnect(){ say("Looking for friends or meetups near you!"); }
+    function aiRecommend(){ say("What do you want a recommendation for? Food, movies, or activities?"); }
+    function tellJoke(){ say("Why did the AI cross the road? To help Joey on the other side! Want to hear another?"); }
+    function weather(){ say("Tell me your city, or I can get your weather using your location."); }
+    function customizeJoey(){ say("How should I look or sound? You can change my color, hat, or even my accent!"); }
+  </script>
+</body>
+</html>
