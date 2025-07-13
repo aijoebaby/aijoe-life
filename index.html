@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AIJOE - Voice Input</title>
+  <title>AIJOE – Smart Commands</title>
   <style>
     html, body { margin: 0; padding: 0; height: 100%; background: #0d1117; color: #fff; font-family: Arial; }
     .app { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; text-align: center; }
@@ -17,13 +17,14 @@
   <div class="app">
     <h1>🐶 Talk to Joey</h1>
     <button class="btn" id="micBtn">🎤 Start Talking</button>
-    <div class="log" id="log">Press the mic and say something!</div>
+    <div class="log" id="log">Say things like “Where am I?”, “Tell me a joke”, “Add milk to my list”</div>
   </div>
 
   <script>
     const synth = window.speechSynthesis;
     const micBtn = document.getElementById('micBtn');
     const log = document.getElementById('log');
+    let todos = [];
 
     function speak(text) {
       const utter = new SpeechSynthesisUtterance(text);
@@ -31,13 +32,47 @@
       synth.speak(utter);
     }
 
-    function handleVoiceCommand(command) {
+    function getLocation() {
+      if ("geolocation" in navigator) {
+        navigator.geolocation.getCurrentPosition(
+          position => {
+            const lat = position.coords.latitude.toFixed(3);
+            const lon = position.coords.longitude.toFixed(3);
+            speak(`You are near latitude ${lat} and longitude ${lon}`);
+          },
+          () => speak("Sorry, I couldn't get your location.")
+        );
+      } else {
+        speak("Geolocation is not supported on this device.");
+      }
+    }
+
+    function handleCommand(command) {
       log.textContent = 'You said: ' + command;
-      // Add more command handling as needed
-      if (command.includes('music')) {
-        speak("Playing music now!");
-      } else if (command.includes('joke')) {
-        speak("Why don't robots get scared? Because they have nerves of steel.");
+
+      if (command.includes("joke")) {
+        speak("Why did Joey bring a ladder? Because he wanted to go to the cloud!");
+      } else if (command.includes("music")) {
+        speak("Joey says let's jam!");
+        window.open("https://www.youtube.com/watch?v=5qap5aO4i9A", "_blank");
+      } else if (command.includes("where am i") || command.includes("location") || command.includes("gps")) {
+        getLocation();
+      } else if (command.includes("weather")) {
+        speak("It looks like a good day to go for a walk! For real-time weather, check your favorite weather app.");
+      } else if (command.includes("add") && command.includes("list")) {
+        const item = command.split("add")[1].split("to")[0].trim();
+        if (item) {
+          todos.push(item);
+          speak(`${item} has been added to your list.`);
+        } else {
+          speak("What would you like me to add?");
+        }
+      } else if (command.includes("show") && command.includes("list")) {
+        if (todos.length) {
+          speak("Your to-do list has: " + todos.join(", "));
+        } else {
+          speak("Your to-do list is empty.");
+        }
       } else {
         speak("You said: " + command);
       }
@@ -54,7 +89,7 @@
 
       recognition.onresult = (event) => {
         const speech = event.results[0][0].transcript.toLowerCase();
-        handleVoiceCommand(speech);
+        handleCommand(speech);
       };
 
       recognition.onerror = (event) => {
