@@ -5,90 +5,44 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>AIJOE</title>
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#0d1117"/>
   <style>
     body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: #0d1117;
-      color: white;
-      text-align: center;
-      padding: 20px;
+      margin: 0; background: #0d1117; color: white;
+      font-family: Arial; text-align: center; padding: 20px;
     }
-    h1 {
-      font-size: 2em;
-      margin-bottom: 10px;
-    }
-    img#joey {
-      width: 120px;
-      border-radius: 20px;
-      margin-bottom: 20px;
-    }
+    h1 { font-size: 2em; margin-bottom: 10px; }
+    img#joey { width: 110px; border-radius: 18px; margin-bottom: 10px; }
     button {
-      background: #1e90ff;
-      color: white;
-      border: none;
-      padding: 14px 20px;
-      margin: 10px;
-      font-size: 1em;
-      border-radius: 12px;
-      cursor: pointer;
+      background: #1e90ff; color: white; border: none; padding: 12px 18px;
+      margin: 10px; border-radius: 12px; font-size: 1em; cursor: pointer;
     }
-    button:hover {
-      background: #3399ff;
-    }
-    .log {
-      margin-top: 20px;
-      font-size: 1.1em;
-      color: #a8d1ff;
-    }
-    .section-btns {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 12px;
-      margin-top: 20px;
-    }
-    .feature-btn {
-      flex: 1 1 120px;
-      background: rgba(255, 255, 255, 0.9);
-      color: #1e1e1e;
-      border: none;
-      border-radius: 12px;
-      padding: 10px;
-      font-weight: bold;
-      font-size: 1em;
-      cursor: pointer;
-    }
-    .feature-btn:hover {
-      background: #ebefff;
-      color: #156afe;
-    }
+    .log { margin-top: 10px; color: #a8d1ff; }
+    .mood { margin-top: 12px; font-size: 0.95em; color: #ffd77a; }
   </style>
 </head>
 <body>
   <h1>🐾 AIJOE</h1>
   <img id="joey" src="joey-avatar.png" alt="Joey Icon"/>
+  <div class="mood" id="moodDisplay">Mood: Happy 😊</div>
   <button id="micBtn">🎤 Talk to Joey</button>
-  <div class="log" id="log">Say: “add dog food to my list” or “show my list”</div>
-
-  <div class="section-btns">
-    <button class="feature-btn" onclick="speak('I can search for you soon!')">🔍 Search</button>
-    <button class="feature-btn" onclick="speak('Reminder coming soon')">⏰ Reminders</button>
-    <button class="feature-btn" onclick="getLocation()">📍 GPS</button>
-    <button class="feature-btn" onclick="speak('Emergency help coming soon')">🚨 Help</button>
-    <button class="feature-btn" onclick="speak('Mood check coming soon')">🧠 Mood</button>
-    <button class="feature-btn" onclick="speak('Translator coming soon')">🌎 Translate</button>
-    <button class="feature-btn" onclick="speak('Voice memo coming soon')">🎙️ Memo</button>
-    <button class="feature-btn" onclick="speak('Social features coming soon')">👫 Social</button>
-    <button class="feature-btn" onclick="speak('AI Suggestion coming soon')">✨ Suggest</button>
-    <button class="feature-btn" onclick="speak('Why did the AI cross the road? To fetch more data!')">🤣 Joke</button>
-    <button class="feature-btn" onclick="speak('Weather coming soon')">🌤️ Weather</button>
-    <button class="feature-btn" onclick="showTodos()">📝 Show List</button>
-  </div>
+  <button onclick="changeMood()">🎭 Change Mood</button>
+  <div class="log" id="log">Say “what’s the weather” or “add milk to my list”</div>
 
   <script>
     const synth = window.speechSynthesis;
+    const log = document.getElementById("log");
+    const moodDisplay = document.getElementById("moodDisplay");
     let todos = JSON.parse(localStorage.getItem('aijoe_todos') || "[]");
+    let mood = localStorage.getItem('aijoe_mood') || "Happy";
+
+    const moods = {
+      "Happy": "😊",
+      "Helpful": "🤖",
+      "Sleepy": "😴",
+      "Funny": "😂"
+    };
 
     function speak(text) {
       const utter = new SpeechSynthesisUtterance(text);
@@ -96,51 +50,56 @@
       synth.speak(utter);
     }
 
-    function getLocation() {
-      if ("geolocation" in navigator) {
-        navigator.geolocation.getCurrentPosition(
-          pos => {
-            const lat = pos.coords.latitude.toFixed(2);
-            const lon = pos.coords.longitude.toFixed(2);
-            speak(`You are near latitude ${lat} and longitude ${lon}`);
-          },
-          () => speak("I couldn't get your location.")
-        );
-      } else {
-        speak("Location is not supported.");
-      }
+    function updateMood() {
+      moodDisplay.textContent = `Mood: ${mood} ${moods[mood]}`;
+      localStorage.setItem('aijoe_mood', mood);
     }
 
-    function showTodos() {
-      if (todos.length > 0) {
-        speak("Your list has: " + todos.join(", "));
-      } else {
-        speak("Your list is empty.");
-      }
+    function changeMood() {
+      const keys = Object.keys(moods);
+      const index = (keys.indexOf(mood) + 1) % keys.length;
+      mood = keys[index];
+      updateMood();
+      speak(`Mood changed to ${mood}`);
     }
 
-    function handleVoice(command) {
-      const lower = command.toLowerCase();
-      document.getElementById('log').textContent = "You said: " + command;
+    function handleCommand(text) {
+      const cmd = text.toLowerCase();
+      log.textContent = "You said: " + cmd;
 
-      if (lower.includes("add") && lower.includes("list")) {
-        const item = lower.split("add")[1].split("to")[0].trim();
+      if (cmd.includes("weather")) {
+        getWeather();
+      } else if (cmd.includes("add") && cmd.includes("list")) {
+        const item = cmd.split("add")[1].split("to")[0].trim();
         if (item) {
           todos.push(item);
           localStorage.setItem('aijoe_todos', JSON.stringify(todos));
-          speak(`${item} has been added to your list.`);
-        } else {
-          speak("What would you like me to add?");
+          speak(`${item} added to your list.`);
         }
-      } else if (lower.includes("show") && lower.includes("list")) {
-        showTodos();
-      } else if (lower.includes("joke")) {
-        speak("Why did the robot go on vacation? It needed to recharge.");
-      } else if (lower.includes("where") || lower.includes("gps")) {
-        getLocation();
+      } else if (cmd.includes("show") && cmd.includes("list")) {
+        todos.length ? speak("Your list: " + todos.join(", ")) : speak("Your list is empty.");
+      } else if (cmd.includes("mood")) {
+        speak(`My current mood is ${mood}`);
       } else {
-        speak("You said: " + command);
+        speak(`You said: ${cmd}`);
       }
+    }
+
+    function getWeather() {
+      const key = "demo"; // placeholder key
+      navigator.geolocation.getCurrentPosition(pos => {
+        const lat = pos.coords.latitude;
+        const lon = pos.coords.longitude;
+        fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${key}&units=imperial`)
+          .then(res => res.json())
+          .then(data => {
+            const temp = Math.round(data.main.temp);
+            const desc = data.weather[0].description;
+            speak(`It's ${temp} degrees and ${desc}`);
+          }).catch(() => {
+            speak("Unable to get weather right now.");
+          });
+      }, () => speak("Can't get your location."));
     }
 
     document.getElementById("micBtn").onclick = () => {
@@ -149,18 +108,15 @@
       recog.interimResults = false;
       recog.maxAlternatives = 1;
       recog.start();
-      document.getElementById('log').textContent = "🎙️ Listening...";
-
-      recog.onresult = event => {
-        const said = event.results[0][0].transcript;
-        handleVoice(said);
-      };
-
-      recog.onerror = event => {
-        document.getElementById('log').textContent = "Error: " + event.error;
+      log.textContent = "🎙️ Listening...";
+      recog.onresult = e => handleCommand(e.results[0][0].transcript);
+      recog.onerror = e => {
+        log.textContent = "Error: " + e.error;
         speak("Sorry, I didn't catch that.");
       };
     };
+
+    window.onload = () => updateMood();
   </script>
 </body>
 </html>
