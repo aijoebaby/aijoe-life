@@ -3,28 +3,92 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AIJOE – Smart Commands</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AIJOE</title>
   <style>
-    html, body { margin: 0; padding: 0; height: 100%; background: #0d1117; color: #fff; font-family: Arial; }
-    .app { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; text-align: center; }
-    .btn { padding: 16px 24px; background: #156afe; color: white; border: none; border-radius: 12px; font-size: 1.2em; cursor: pointer; margin-top: 20px; }
-    .btn:hover { background: #1a76ff; }
-    .log { margin-top: 20px; font-size: 1.1em; color: #a8d1ff; max-width: 90%; }
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #0d1117;
+      color: white;
+      text-align: center;
+      padding: 20px;
+    }
+    h1 {
+      font-size: 2em;
+      margin-bottom: 10px;
+    }
+    img#joey {
+      width: 120px;
+      border-radius: 20px;
+      margin-bottom: 20px;
+    }
+    button {
+      background: #1e90ff;
+      color: white;
+      border: none;
+      padding: 14px 20px;
+      margin: 10px;
+      font-size: 1em;
+      border-radius: 12px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #3399ff;
+    }
+    .log {
+      margin-top: 20px;
+      font-size: 1.1em;
+      color: #a8d1ff;
+    }
+    .section-btns {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 12px;
+      margin-top: 20px;
+    }
+    .feature-btn {
+      flex: 1 1 120px;
+      background: rgba(255, 255, 255, 0.9);
+      color: #1e1e1e;
+      border: none;
+      border-radius: 12px;
+      padding: 10px;
+      font-weight: bold;
+      font-size: 1em;
+      cursor: pointer;
+    }
+    .feature-btn:hover {
+      background: #ebefff;
+      color: #156afe;
+    }
   </style>
 </head>
 <body>
-  <div class="app">
-    <h1>🐶 Talk to Joey</h1>
-    <button class="btn" id="micBtn">🎤 Start Talking</button>
-    <div class="log" id="log">Say things like “Where am I?”, “Tell me a joke”, “Add milk to my list”</div>
+  <h1>🐾 AIJOE</h1>
+  <img id="joey" src="joey-avatar.png" alt="Joey Icon"/>
+  <button id="micBtn">🎤 Talk to Joey</button>
+  <div class="log" id="log">Say: “add dog food to my list” or “show my list”</div>
+
+  <div class="section-btns">
+    <button class="feature-btn" onclick="speak('I can search for you soon!')">🔍 Search</button>
+    <button class="feature-btn" onclick="speak('Reminder coming soon')">⏰ Reminders</button>
+    <button class="feature-btn" onclick="getLocation()">📍 GPS</button>
+    <button class="feature-btn" onclick="speak('Emergency help coming soon')">🚨 Help</button>
+    <button class="feature-btn" onclick="speak('Mood check coming soon')">🧠 Mood</button>
+    <button class="feature-btn" onclick="speak('Translator coming soon')">🌎 Translate</button>
+    <button class="feature-btn" onclick="speak('Voice memo coming soon')">🎙️ Memo</button>
+    <button class="feature-btn" onclick="speak('Social features coming soon')">👫 Social</button>
+    <button class="feature-btn" onclick="speak('AI Suggestion coming soon')">✨ Suggest</button>
+    <button class="feature-btn" onclick="speak('Why did the AI cross the road? To fetch more data!')">🤣 Joke</button>
+    <button class="feature-btn" onclick="speak('Weather coming soon')">🌤️ Weather</button>
+    <button class="feature-btn" onclick="showTodos()">📝 Show List</button>
   </div>
 
   <script>
     const synth = window.speechSynthesis;
-    const micBtn = document.getElementById('micBtn');
-    const log = document.getElementById('log');
-    let todos = [];
+    let todos = JSON.parse(localStorage.getItem('aijoe_todos') || "[]");
 
     function speak(text) {
       const utter = new SpeechSynthesisUtterance(text);
@@ -35,65 +99,65 @@
     function getLocation() {
       if ("geolocation" in navigator) {
         navigator.geolocation.getCurrentPosition(
-          position => {
-            const lat = position.coords.latitude.toFixed(3);
-            const lon = position.coords.longitude.toFixed(3);
+          pos => {
+            const lat = pos.coords.latitude.toFixed(2);
+            const lon = pos.coords.longitude.toFixed(2);
             speak(`You are near latitude ${lat} and longitude ${lon}`);
           },
-          () => speak("Sorry, I couldn't get your location.")
+          () => speak("I couldn't get your location.")
         );
       } else {
-        speak("Geolocation is not supported on this device.");
+        speak("Location is not supported.");
       }
     }
 
-    function handleCommand(command) {
-      log.textContent = 'You said: ' + command;
+    function showTodos() {
+      if (todos.length > 0) {
+        speak("Your list has: " + todos.join(", "));
+      } else {
+        speak("Your list is empty.");
+      }
+    }
 
-      if (command.includes("joke")) {
-        speak("Why did Joey bring a ladder? Because he wanted to go to the cloud!");
-      } else if (command.includes("music")) {
-        speak("Joey says let's jam!");
-        window.open("https://www.youtube.com/watch?v=5qap5aO4i9A", "_blank");
-      } else if (command.includes("where am i") || command.includes("location") || command.includes("gps")) {
-        getLocation();
-      } else if (command.includes("weather")) {
-        speak("It looks like a good day to go for a walk! For real-time weather, check your favorite weather app.");
-      } else if (command.includes("add") && command.includes("list")) {
-        const item = command.split("add")[1].split("to")[0].trim();
+    function handleVoice(command) {
+      const lower = command.toLowerCase();
+      document.getElementById('log').textContent = "You said: " + command;
+
+      if (lower.includes("add") && lower.includes("list")) {
+        const item = lower.split("add")[1].split("to")[0].trim();
         if (item) {
           todos.push(item);
+          localStorage.setItem('aijoe_todos', JSON.stringify(todos));
           speak(`${item} has been added to your list.`);
         } else {
           speak("What would you like me to add?");
         }
-      } else if (command.includes("show") && command.includes("list")) {
-        if (todos.length) {
-          speak("Your to-do list has: " + todos.join(", "));
-        } else {
-          speak("Your to-do list is empty.");
-        }
+      } else if (lower.includes("show") && lower.includes("list")) {
+        showTodos();
+      } else if (lower.includes("joke")) {
+        speak("Why did the robot go on vacation? It needed to recharge.");
+      } else if (lower.includes("where") || lower.includes("gps")) {
+        getLocation();
       } else {
         speak("You said: " + command);
       }
     }
 
-    micBtn.onclick = () => {
-      const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-      recognition.lang = 'en-US';
-      recognition.interimResults = false;
-      recognition.maxAlternatives = 1;
+    document.getElementById("micBtn").onclick = () => {
+      const recog = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+      recog.lang = 'en-US';
+      recog.interimResults = false;
+      recog.maxAlternatives = 1;
+      recog.start();
+      document.getElementById('log').textContent = "🎙️ Listening...";
 
-      recognition.start();
-      log.textContent = '🎙️ Listening...';
-
-      recognition.onresult = (event) => {
-        const speech = event.results[0][0].transcript.toLowerCase();
-        handleCommand(speech);
+      recog.onresult = event => {
+        const said = event.results[0][0].transcript;
+        handleVoice(said);
       };
 
-      recognition.onerror = (event) => {
-        log.textContent = 'Error: ' + event.error;
+      recog.onerror = event => {
+        document.getElementById('log').textContent = "Error: " + event.error;
         speak("Sorry, I didn't catch that.");
       };
     };
