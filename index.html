@@ -1,4 +1,78 @@
-<!DOCTYPE html>
+<!DOCTYPE html><!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>AIJOE – Active Buttons</title>
+  <style>
+    html,body{margin:0;height:100%;background:#0d1117;font-family:Arial;color:#fff}
+    /* blue download */
+    .dl{position:fixed;top:12px;right:16px;z-index:2}
+    .dl a{color:#1e90ff;font-weight:bold;text-decoration:none}
+    /* enable audio splash */
+    #splash{position:fixed;inset:0;background:#000e;display:flex;justify-content:center;align-items:center;z-index:4}
+    #splash button{padding:18px 24px;font-size:1.3em;border:none;border-radius:12px;background:#1e90ff;color:#fff}
+    main{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%}
+    .grid{display:flex;flex-wrap:wrap;gap:14px;justify-content:center;max-width:600px;margin-top:24px}
+    .btn{flex:1 1 130px;min-width:120px;background:#ffffffd9;color:#222;border:none;border-radius:14px;padding:14px 6px;
+         display:flex;flex-direction:column;align-items:center;font-size:1em;cursor:pointer;transition:.2s}
+    .btn:hover{background:#ebefff;color:#1e90ff}
+    .btn span{margin-top:5px}
+  </style>
+</head>
+<body>
+  <!-- blue download line -->
+  <div class="dl"><a href="index.html" download>⬇️ Download index.html</a></div>
+
+  <!-- enable audio splash -->
+  <div id="splash"><button id="enableAudio">🔊 Enable Audio</button></div>
+
+  <main>
+    <button class="btn" id="mic">🎤<span>Talk</span></button>
+    <div class="grid">
+      <button class="btn" id="searchBtn">🔍<span>Ask GPT</span></button>
+      <button class="btn" id="reminderBtn">⏰<span>Reminder</span></button>
+      <button class="btn" id="gpsBtn">📍<span>GPS</span></button>
+      <button class="btn" id="sosBtn">🚨<span>Help</span></button>
+      <button class="btn" id="moodBtn">🧠<span>Mood</span></button>
+      <button class="btn" id="translateBtn">🌎<span>Translate</span></button>
+      <button class="btn" id="memoBtn">🎙️<span>Memo</span></button>
+      <button class="btn" id="socialBtn">👫<span>Social</span></button>
+      <button class="btn" id="aiBtn">✨<span>Suggest</span></button>
+      <button class="btn" id="jokeBtn">🤣<span>Joke</span></button>
+      <button class="btn" id="weatherBtn">🌤️<span>Weather</span></button>
+      <button class="btn" id="customBtn">🎨<span>Custom</span></button>
+      <button class="btn" id="musicBtn">🎵<span>Music</span></button>
+    </div>
+  </main>
+
+<script>
+const synth=window.speechSynthesis;
+const speak=t=>{const u=new SpeechSynthesisUtterance(t);u.voice=synth.getVoices().find(v=>v.lang==='en-US')||null;synth.speak(u);};
+
+document.getElementById('enableAudio').onclick=()=>{speak('Audio enabled!');splash.remove();};
+
+const msgs={
+  mic:'How can I help?',searchBtn:'Search feature coming soon.',
+  reminderBtn:'Reminder feature coming soon.',
+  gpsBtn:'GPS feature coming soon.',
+  sosBtn:'Emergency feature coming soon.',
+  moodBtn:'Mood check coming soon.',
+  translateBtn:'Translator coming soon.',
+  memoBtn:'Voice memo coming soon.',
+  socialBtn:'Social feature coming soon.',
+  aiBtn:'AI suggestions coming soon.',
+  jokeBtn:'Why did the AI cross the road? To get more data!',
+  weatherBtn:'Weather feature coming soon.',
+  customBtn:'Customization coming soon.',
+  musicBtn:'Music feature coming soon.'
+};
+Object.keys(msgs).forEach(id=>{
+  document.getElementById(id).onclick=()=>speak(msgs[id]);
+});
+</script>
+</body>
+</html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
