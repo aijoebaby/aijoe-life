@@ -1,4 +1,188 @@
-<!DOCTYPE html><!DOCTYPE html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AIJOE - Click to Download</title>
+  <style>
+    html, body { height: 100%; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      min-height: 100vh; min-width: 100vw;
+      background: #0d1117;
+      color: #fff;
+    }
+    .download-line {
+      width: 100%;
+      text-align: right;
+      padding: 10px 18px;
+      z-index: 99;
+      position: absolute;
+      top: 0;
+      left: 0;
+      background: #156afe;
+      font-size: 1.15em;
+      font-family: inherit;
+      box-sizing: border-box;
+    }
+    .download-line a {
+      color: #fff;
+      font-weight: bold;
+      text-decoration: none;
+      cursor: pointer;
+      transition: color 0.13s;
+    }
+    .download-line a:hover {
+      color: #a8d1ff;
+    }
+    .overlay {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(20,28,35,0.32); z-index: 1; pointer-events: none;
+    }
+    .app-content {
+      position: relative; z-index: 2;
+      display: flex; flex-direction: column; align-items: center; justify-content: flex-end;
+      min-height: 100vh; width: 100vw; padding-bottom: 32px;
+    }
+    .voice-select { margin: 16px 0 8px; padding: 8px; font-size: 1em; border-radius: 8px; }
+    .big-btn {
+      background: rgba(38,83,243,0.90); color:#fff; font-size:1.3em;
+      border:none; border-radius:18px; padding:18px 28px; margin:12px auto 15px;
+      box-shadow:0 6px 16px #0003; font-weight:bold; width:86vw; max-width:400px;
+      letter-spacing:1px; display:block; opacity:0.95;
+    }
+    .section-btns { display:flex; flex-wrap:wrap; justify-content:center; gap:14px; margin-bottom:16px; width:100%; max-width:430px; }
+    .feature-btn {
+      flex:1 1 125px; min-width:120px; background:rgba(255,255,255,0.78);
+      color:#2a2231; border:none; border-radius:16px; box-shadow:0 2px 8px #0002;
+      padding:13px 5px 11px; display:flex; flex-direction:column; align-items:center;
+      cursor:pointer; font-size:1em; opacity:0.97; transition:0.17s; font-weight:500;
+      pointer-events:auto;
+    }
+    .feature-btn:hover, .feature-btn:active { background:#ebefff; color:#2653f3; }
+    .feature-btn span { margin-top:5px; }
+    .footer { margin-top:18px; font-size:1em; color:#e7e8ea; text-shadow:0 2px 6px #0008; text-align:center; }
+    .music-player {
+      position:fixed; bottom:0; left:0; width:100%; height:0; overflow:hidden;
+      transition:height 0.3s ease; z-index:4;
+    }
+    .music-player iframe { width:100%; height:100%; border:none; }
+    @media(max-width:600px){ .big-btn{font-size:1em;max-width:97vw;} .feature-btn{font-size:0.91em;} }
+  </style>
+</head>
+<body>
+  <!-- One blue line download -->
+  <div class="download-line">
+    <a href="#" id="downloadLink">⬇️ Click here to download this app (aijoe.html)</a>
+  </div>
+  <div class="overlay"></div>
+  <div class="app-content">
+    <label for="voiceSelect" style="font-weight:500;">Choose Voice:</label>
+    <select id="voiceSelect" class="voice-select" aria-label="Select a voice">
+      <option value="" disabled selected>Select a voice</option>
+    </select>
+    <button class="big-btn" id="mic">🎤 Talk to Joey</button>
+    <div class="section-btns">
+      <button class="feature-btn" id="searchBtn">🔍<span>ChatGPT Search</span></button>
+      <button class="feature-btn" id="reminderBtn">⏰<span>Reminders</span></button>
+      <button class="feature-btn" id="gpsBtn">📍<span>GPS/Local</span></button>
+      <button class="feature-btn" id="sosBtn">🚨<span>Help</span></button>
+      <button class="feature-btn" id="moodBtn">🧠<span>Mood</span></button>
+      <button class="feature-btn" id="translateBtn">🌎<span>Translator</span></button>
+      <button class="feature-btn" id="memoBtn">🎙️<span>Voice Memo</span></button>
+      <button class="feature-btn" id="socialBtn">👫<span>Social</span></button>
+      <button class="feature-btn" id="aiBtn">✨<span>AI Suggest</span></button>
+      <button class="feature-btn" id="jokeBtn">🤣<span>Joke</span></button>
+      <button class="feature-btn" id="weatherBtn">🌤️<span>Weather</span></button>
+      <button class="feature-btn" id="customBtn">🎨<span>Customize</span></button>
+      <button class="feature-btn" id="musicBtn">🎵<span>Music</span></button>
+    </div>
+    <div class="footer">AIJOE • &copy; <span id="year"></span></div>
+  </div>
+  <div class="music-player" id="musicPlayer"></div>
+  <script>
+    // --- Download this whole page as a file instantly ---
+    document.getElementById('downloadLink').onclick = function(e) {
+      e.preventDefault();
+      const source = document.documentElement.outerHTML;
+      const blob = new Blob([source], {type:'text/html'});
+      const url = URL.createObjectURL(blob);
+      const temp = document.createElement('a');
+      temp.href = url;
+      temp.download = 'aijoe.html';
+      document.body.appendChild(temp);
+      temp.click();
+      setTimeout(()=>{ 
+        document.body.removeChild(temp); 
+        URL.revokeObjectURL(url); 
+      }, 300);
+    };
+
+    // === Voice Setup ===
+    const synth = window.speechSynthesis;
+    const voiceSelect = document.getElementById('voiceSelect');
+    let voices = [];
+    function populateVoices() {
+      voices = synth.getVoices().filter(v => v.lang.startsWith('en'));
+      voiceSelect.innerHTML = '<option value="" disabled>Select a voice</option>';
+      voices.forEach(v => {
+        const opt = document.createElement('option');
+        opt.value = v.name;
+        opt.textContent = v.name + ' (' + v.lang + ')';
+        voiceSelect.appendChild(opt);
+      });
+    }
+    // Try to update voices ASAP
+    populateVoices();
+    if (typeof synth.onvoiceschanged !== "undefined") {
+      synth.onvoiceschanged = populateVoices;
+    }
+
+    // === Voice Helper ===
+    function say(text) {
+      if (synth.speaking) synth.cancel();
+      const utter = new SpeechSynthesisUtterance(text);
+      const selected = voices.find(v => v.name === voiceSelect.value);
+      utter.voice = selected || voices[0];
+      utter.pitch = 1;
+      utter.rate = 1;
+      const micBtn = document.getElementById('mic');
+      utter.onstart = () => micBtn.disabled = true;
+      utter.onend = () => micBtn.disabled = false;
+      synth.speak(utter);
+    }
+
+    // === Button Actions ===
+    document.getElementById('mic').onclick = () => say("Listening... (feature coming soon!)");
+    document.getElementById('searchBtn').onclick = () => say("Search feature coming soon.");
+    document.getElementById('reminderBtn').onclick = () => say("Reminders feature coming soon.");
+    document.getElementById('gpsBtn').onclick = () => say("GPS/Local feature coming soon.");
+    document.getElementById('sosBtn').onclick = () => say("Help feature coming soon.");
+    document.getElementById('moodBtn').onclick = () => say("Mood feature coming soon.");
+    document.getElementById('translateBtn').onclick = () => say("Translator feature coming soon.");
+    document.getElementById('memoBtn').onclick = () => say("Voice memo feature coming soon.");
+    document.getElementById('socialBtn').onclick = () => say("Social feature coming soon.");
+    document.getElementById('aiBtn').onclick = () => say("AI suggestion feature coming soon.");
+    document.getElementById('jokeBtn').onclick = () => say("Why did the AI cross the road? To get more data!");
+    document.getElementById('weatherBtn').onclick = () => say("Weather feature coming soon.");
+    document.getElementById('customBtn').onclick = () => say("Customization feature coming soon.");
+    document.getElementById('musicBtn').onclick = () => {
+      const player = document.getElementById('musicPlayer');
+      if (player.style.height === '200px') {
+        player.style.height = '0';
+        player.innerHTML = '';
+      } else {
+        player.style.height = '200px';
+        player.innerHTML = '<iframe src="https://www.youtube.com/embed/5qap5aO4i9A?autoplay=1&loop=1&playlist=5qap5aO4i9A" allow="autoplay; encrypted-media" allowfullscreen></iframe>';
+      }
+    };
+
+    // === Year Footer ===
+    document.getElementById('year').textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>
+!DOCTYPE html><!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
