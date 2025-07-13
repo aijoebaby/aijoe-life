@@ -1,4 +1,19 @@
-
+async function addReminder(text, minutes) {
+  const when = Date.now() + minutes * 60 * 1000;
+  const list = JSON.parse(localStorage.getItem('reminders') || '[]');
+  list.push({ text, when });
+  localStorage.setItem('reminders', JSON.stringify(list));
+  Notification.requestPermission().then(() => {
+    setTimeout(() => new Notification('Reminder', { body: text }), minutes * 60 * 1000);
+  });
+  speak(`Okay, I’ll remind you in ${minutes} minutes.`);
+}
+document.getElementById('reminderBtn').onclick = () =>
+  chat('Ask user: “What should I remind you about and when?”', reply => {
+    // naive parse: “Take meds in 30 minutes”
+    const match = reply.match(/(.+) in (\\d+) (minute|hour)/i);
+    if (match) addReminder(match[1], parseInt(match[2]) * (match[3].startsWith('hour') ? 60 : 1));
+  });
 function sendText() {
   const input = document.getElementById('textInput').value;
   document.getElementById('response').innerText = "AIJOE heard: " + input;
