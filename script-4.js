@@ -1,5 +1,5 @@
 
-/* AIJOE script.js  — 2025‑07‑12
+* AIJOE script.js  — 2025‑07‑12
    --------------------------------
    1. Reliable microphone handling (id="micBtn" or data‑ai‑action="voice").
    2. Continuous listening toggle (click once to start, again to stop).
