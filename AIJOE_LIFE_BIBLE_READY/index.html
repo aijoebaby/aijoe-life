@@ -1,0 +1,126 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AIJOE</title>
+  <link rel="manifest" href="manifest.json"/>
+  <meta name="theme-color" content="#0d1117"/>
+  <style>
+    body{margin:0;font-family:Arial;background:#0d1117;color:#fff;text-align:center;padding:20px}
+    h1{font-size:2em;margin-bottom:10px}
+    img#joey{width:110px;border-radius:18px;margin-bottom:10px}
+    button{background:#1e90ff;color:#fff;border:none;padding:12px 18px;margin:8px;border-radius:12px;font-size:1em;cursor:pointer}
+    .log{margin-top:10px;color:#a8d1ff}
+    .mood{margin-top:12px;font-size:.95em;color:#ffd77a}
+    .section-btns{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin-top:14px}
+    .feature-btn{flex:1 1 120px;min-width:110px;background:#ffffffdd;color:#111;border:none;border-radius:12px;padding:10px;font-weight:bold}
+    .feature-btn:hover{background:#ebefff;color:#156afe}
+  </style>
+</head>
+<body>
+  <h1>🐾 AIJOE</h1>
+  <img id="joey" src="joey-avatar.png" alt="Joey"/>
+  <div class="mood" id="moodDisplay">Mood: Happy 😊</div>
+  <button id="micBtn">🎤 Talk to Joey</button>
+
+  <div class="section-btns">
+    <button class="feature-btn" id="musicBtn">🎵 Music</button>
+    <button class="feature-btn" id="gpsBtn">📍 GPS</button>
+    <button class="feature-btn" id="weatherBtn">🌤️ Weather</button>
+    <button class="feature-btn" id="todoShowBtn">📝 Show List</button>
+    <button class="feature-btn" id="bibleBtn">📖 Bible Verse</button>
+    <button class="feature-btn" id="moodBtn">🎭 Change Mood</button>
+  </div>
+
+  <div class="log" id="log">Say commands like “add dog food to my list” or tap buttons.</div>
+
+<script>
+const synth = window.speechSynthesis;
+const log = document.getElementById("log");
+const moodDisplay = document.getElementById("moodDisplay");
+let todos = JSON.parse(localStorage.getItem("aijoe_todos") || "[]");
+let mood = localStorage.getItem("aijoe_mood") || "Happy";
+const moods = {Happy:"😊",Helpful:"🤖",Sleepy:"😴",Funny:"😂"};
+
+function speak(t){
+  const u=new SpeechSynthesisUtterance(t);
+  u.voice=synth.getVoices().find(v=>v.lang.startsWith("en"))||null;
+  synth.speak(u);
+}
+
+function updateMood(){
+  moodDisplay.textContent=`Mood: ${mood} ${moods[mood]||""}`;
+  localStorage.setItem("aijoe_mood",mood);
+}
+
+function changeMood(){
+  const keys=Object.keys(moods);
+  mood=keys[(keys.indexOf(mood)+1)%keys.length];
+  updateMood();
+  speak("Mood changed to "+mood);
+}
+
+function showTodos(){
+  if(todos.length){speak("Your list: "+todos.join(", "));}
+  else{ speak("Your list is empty.");}
+}
+
+function getLocation(){
+  navigator.geolocation.getCurrentPosition(p=>{
+     speak(`Lat ${p.coords.latitude.toFixed(2)}, Lon ${p.coords.longitude.toFixed(2)}`);
+  },()=>speak("Can't get location"));
+}
+
+async function getWeather(){
+  navigator.geolocation.getCurrentPosition(async p=>{
+    const key="a51683e586f6e2f2b021baad4c9c1d27";
+    try{
+      const r=await fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${p.coords.latitude}&lon=${p.coords.longitude}&appid=${key}&units=imperial`);
+      const d=await r.json();
+      speak(`It's ${Math.round(d.main.temp)} degrees and ${d.weather[0].description}`);
+    }catch(e){speak("Can't fetch weather.");}
+  },()=>speak("Need location for weather"));
+}
+
+async function getBibleVerse(){
+  try{
+    const r=await fetch("https://beta.ourmanna.com/api/v1/get/?format=json");
+    const d=await r.json();
+    const verse=d.verse.details.text+" — "+d.verse.details.reference;
+    speak(verse);
+  }catch(e){speak("Couldn't fetch Bible verse.");}
+}
+
+document.getElementById("musicBtn").onclick=()=>{window.open("https://www.youtube.com/watch?v=5qap5aO4i9A","_blank"); speak("Opening music.");};
+document.getElementById("gpsBtn").onclick=getLocation;
+document.getElementById("weatherBtn").onclick=getWeather;
+document.getElementById("todoShowBtn").onclick=showTodos;
+document.getElementById("bibleBtn").onclick=getBibleVerse;
+document.getElementById("moodBtn").onclick=changeMood;
+
+document.getElementById("micBtn").onclick=()=>{
+  const rec=new(window.SpeechRecognition||window.webkitSpeechRecognition)();
+  rec.lang="en-US";rec.interimResults=false;rec.maxAlternatives=1;rec.start();
+  log.textContent="🎙️ Listening...";
+  rec.onresult=e=>{
+    const cmd=e.results[0][0].transcript.toLowerCase();
+    log.textContent="You said: "+cmd;
+    if(cmd.includes("add")&&cmd.includes("list")){
+      const item=cmd.split("add")[1].split("to")[0].trim();
+      if(item){todos.push(item);localStorage.setItem("aijoe_todos",JSON.stringify(todos));speak(item+" added to your list.");}
+    }else if(cmd.includes("show")&&cmd.includes("list")){showTodos();}
+    else if(cmd.includes("weather")){getWeather();}
+    else if(cmd.includes("verse")){getBibleVerse();}
+    else if(cmd.includes("mood")){changeMood();}
+    else if(cmd.includes("music")){window.open("https://www.youtube.com/watch?v=5qap5aO4i9A","_blank"); speak("Opening music");}
+    else{ speak("You said "+cmd);}
+  };
+  rec.onerror=e=>{log.textContent="Error: "+e.error; speak("Sorry, couldn't hear.");};
+};
+
+window.onload=updateMood;
+</script>
+</body>
+</html>
