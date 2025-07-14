@@ -4,70 +4,96 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>AIJOE – Cheerful Voice</title>
+<title>AIJOE</title>
 <link rel="manifest" href="manifest.json"/>
 <meta name="theme-color" content="#0d1117"/>
 <style>
  body{margin:0;font-family:Arial;background:#0d1117;color:#fff;text-align:center;padding:20px}
- h1{font-size:2em;margin-bottom:10px}
- select,button{background:#1e90ff;color:#fff;border:none;padding:10px 14px;margin:8px;border-radius:10px;font-size:1em;cursor:pointer}
- .log{margin-top:12px;color:#a8d1ff}
+ h1{font-size:2em;margin-bottom:8px}
+ #joey{width:110px;border-radius:18px;margin-bottom:6px}
+ select,button{background:#1e90ff;color:#fff;border:none;border-radius:12px;padding:10px 14px;margin:6px;font-size:1em;cursor:pointer}
+ .section{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-top:12px}
+ .btn{flex:1 1 118px;min-width:108px;background:#ffffffee;color:#000;font-weight:bold}
+ .btn:hover{background:#ebefff;color:#156afe}
+ .log{margin-top:12px;color:#a8d1ff;min-height:18px}
 </style>
 </head>
 <body>
 <h1>🐾 AIJOE</h1>
-<label for="voiceSel">Choose Voice:</label>
-<select id="voiceSel"></select><br/>
-<button id="micBtn">🎤 Talk to Joey</button>
-<div id="log" class="log">Allow mic, choose a voice, say something.</div>
+<img id="joey" src="joey-avatar.png" alt="Joey"/>
+<br>
+<label for="voiceSel">Voice:</label>
+<select id="voiceSel"></select>
+<button id="micBtn">🎤 Talk</button>
+
+<div class="section">
+  <button class="btn" id="musicBtn">🎵 Music</button>
+  <button class="btn" id="gpsBtn">📍 GPS</button>
+  <button class="btn" id="weatherBtn">🌤️ Weather</button>
+  <button class="btn" id="showListBtn">📝 Show List</button>
+  <button class="btn" id="bibleBtn">📖 Bible</button>
+  <button class="btn" id="moodBtn">🎭 Mood</button>
+</div>
+
+<div class="log" id="log">Ready.</div>
 
 <script>
 const synth = window.speechSynthesis;
-const voiceSel=document.getElementById("voiceSel");
+const voiceSel = document.getElementById('voiceSel');
 function loadVoices(){
-  const voices=synth.getVoices().filter(v=>v.lang.startsWith('en'));
+  const voices = synth.getVoices().filter(v=>v.lang.startsWith('en'));
   voiceSel.innerHTML='';
-  voices.forEach((v,i)=>{
-     const opt=document.createElement('option');
-     opt.value=v.name;
-     opt.textContent=v.name;
-     if(/male/i.test(v.name) || v.name.includes('Google US English')){
-        opt.selected=true;
-     }
-     voiceSel.appendChild(opt);
+  voices.forEach(v=>{
+    const o=document.createElement('option');
+    o.value=v.name; o.textContent=v.name;
+    if(v.name.includes('Google US English') || /male/i.test(v.name)) o.selected=true;
+    voiceSel.appendChild(o);
   });
 }
-loadVoices();
-synth.onvoiceschanged=loadVoices;
+loadVoices(); synth.onvoiceschanged=loadVoices;
 
-function speak(t){
-  const utter=new SpeechSynthesisUtterance(t);
-  const chosen=Array.from(synth.getVoices()).find(v=>v.name===voiceSel.value);
-  utter.voice=chosen||null;
-  utter.pitch=1.15; // cheerful
-  utter.rate=1.05;
-  utter.volume=1;
-  synth.speak(utter);
+function speak(text){
+  const u = new SpeechSynthesisUtterance(text);
+  const voice = synth.getVoices().find(v=>v.name===voiceSel.value);
+  if(voice) u.voice = voice;
+  u.pitch = 1.1; u.rate = 1.05;
+  synth.speak(u);
 }
 
-function supportsRec(){return !!(window.SpeechRecognition||window.webkitSpeechRecognition);}
+let todos = JSON.parse(localStorage.getItem('aijoe_todos')||"[]");
+let mood = localStorage.getItem('aijoe_mood')||"Happy";
+const moods={Happy:"😊",Helpful:"🤖",Sleepy:"😴",Funny:"😂"};
+function updateMood(){document.getElementById('log').textContent='Mood: '+mood+' '+moods[mood];localStorage.setItem('aijoe_mood',mood);}
+updateMood();
 
+document.getElementById('moodBtn').onclick=()=>{const k=Object.keys(moods);mood=k[(k.indexOf(mood)+1)%k.length];updateMood();speak('Mood now '+mood);};
+document.getElementById('musicBtn').onclick=()=>{window.open('https://www.youtube.com/watch?v=5qap5aO4i9A','_blank');speak('Opening music');};
+document.getElementById('gpsBtn').onclick=()=>navigator.geolocation.getCurrentPosition(p=>speak(`Lat ${p.coords.latitude.toFixed(2)}, Lon ${p.coords.longitude.toFixed(2)}`),()=>speak('Location error'));
+document.getElementById('showListBtn').onclick=()=>todos.length?speak('List: '+todos.join(', ')):speak('Your list is empty.');
+document.getElementById('bibleBtn').onclick=async()=>{try{const r=await fetch('https://beta.ourmanna.com/api/v1/get/?format=json');const d=await r.json();speak(d.verse.details.text+' — '+d.verse.details.reference);}catch(e){speak('Verse fetch failed');}};
+document.getElementById('weatherBtn').onclick=()=>navigator.geolocation.getCurrentPosition(async p=>{try{const key='a51683e586f6e2f2b021baad4c9c1d27';const res=await fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${p.coords.latitude}&lon=${p.coords.longitude}&appid=${key}&units=imperial`);const w=await res.json();speak(`It's ${Math.round(w.main.temp)} and ${w.weather[0].description}`);}catch(e){speak('Weather error');}},()=>speak('Need location'));
+
+function supportsRec(){return !!(window.SpeechRecognition||window.webkitSpeechRecognition);}
 document.getElementById('micBtn').onclick=()=>{
- if(!supportsRec()){document.getElementById('log').textContent="SpeechRecognition not supported.";speak("Sorry, voice input not supported on this device.");return;}
- const Rec=window.SpeechRecognition||window.webkitSpeechRecognition;
- const rec=new Rec();
- rec.lang='en-US';
- rec.start();
+ if(!supportsRec()){speak('Voice input not supported'); return;}
+ const Rec = window.SpeechRecognition||window.webkitSpeechRecognition;
+ const rec = new Rec(); rec.lang='en-US'; rec.start();
  document.getElementById('log').textContent='🎙️ Listening...';
- rec.onresult=e=>{
-   const text=e.results[0][0].transcript;
-   document.getElementById('log').textContent='You said: '+text;
-   speak("You said "+text);
+ rec.onresult = e=>{
+   const t=e.results[0][0].transcript.toLowerCase();
+   document.getElementById('log').textContent='You: '+t;
+   if(t.includes('add')&&t.includes('list')){
+      const item=t.split('add')[1].split('to')[0].trim();
+      if(item){todos.push(item);localStorage.setItem('aijoe_todos',JSON.stringify(todos));speak(item+' added');}
+   }else if(t.includes('show')&&t.includes('list')){document.getElementById('showListBtn').click();}
+   else if(t.includes('weather')){document.getElementById('weatherBtn').click();}
+   else if(t.includes('verse')){document.getElementById('bibleBtn').click();}
+   else if(t.includes('music')){document.getElementById('musicBtn').click();}
+   else if(t.includes('mood')){document.getElementById('moodBtn').click();}
+   else if(t.includes('location')||t.includes('gps')){document.getElementById('gpsBtn').click();}
+   else{ speak('You said '+t);}
  };
- rec.onerror=e=>{
-   document.getElementById('log').textContent='Error: '+e.error;
-   speak("Sorry, I didn't catch that.");
- };
+ rec.onerror=e=>{document.getElementById('log').textContent='Error: '+e.error; speak('Mic error');};
 };
 </script>
 </body>
