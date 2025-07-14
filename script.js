@@ -1,140 +1,56 @@
-async function addReminder(text, minutes) {
-  const when = Date.now() + minutes * 60 * 1000;
-  const list = JSON.parse(localStorage.getItem('reminders') || '[]');
-  list.push({ text, when });
-  localStorage.setItem('reminders', JSON.stringify(list));
-  Notification.requestPermission().then(() => {
-    setTimeout(() => new Notification('Reminder', { body: text }), minutes * 60 * 1000);
-  });
-  speak(`Okay, I’ll remind you in ${minutes} minutes.`);
+// Populate voice list
+const voiceSelect = document.getElementById('voiceSelect');
+function populateVoices(){
+  const voices = speechSynthesis.getVoices();
+  voiceSelect.innerHTML = voices.map((v,i)=>`<option value="${i}">${v.name} (${v.lang})</option>`).join('');
 }
-document.getElementById('reminderBtn').onclick = () =>
-  chat('Ask user: “What should I remind you about and when?”', reply => {
-    // naive parse: “Take meds in 30 minutes”
-    const match = reply.match(/(.+) in (\\d+) (minute|hour)/i);
-    if (match) addReminder(match[1], parseInt(match[2]) * (match[3].startsWith('hour') ? 60 : 1));
-  });
-function sendText() {
-  const input = document.getElementById('textInput').value;
-  document.getElementById('response').innerText = "AIJOE heard: " + input;
-}
+populateVoices();
+speechSynthesis.onvoiceschanged = populateVoices;
 
-document.getElementById('micBtn').addEventListener('click',()=>{
-  const rec=new (window.SpeechRecognition||window.webkitSpeechRecognition)();
-  rec.lang='en-US';rec.start();
-  rec.onresult=e=>document.getElementById('response').innerText="AIJOE heard: "+e.results[0][0].transcript;
-  rec.onerror=e=>document.getElementById('response').innerText="Voice error: "+e.error;
-});
-* AIJOE script.js  — 2025‑07‑12
-   --------------------------------
-   1. Reliable microphone handling (id="micBtn" or data‑ai‑action="voice").
-   2. Continuous listening toggle (click once to start, again to stop).
-   3. Adds wake‑word “AIJOE” detection (very light regex check).
-   4. Generic dispatcher for buttons marked data‑ai‑action="<action>".
-   5. Music button overlay unchanged (id="musicBtn").
-   -------------------------------- */
-
-let rec      = null;      // SpeechRecognition instance
-let listening = false;    // Is the mic currently active?
-
-// Cross‑browser SpeechRecognition
-const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-
-// --- MICROPHONE SETUP ---
-function startListening() {
-  if (!SR) return updateResponse("SpeechRecognition not supported in this browser.");
-  rec = new SR();
+// Speech recognition
+const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+let rec;
+if(SpeechRecognition){
+  rec = new SpeechRecognition();
   rec.lang = 'en-US';
-  rec.continuous = true;
   rec.interimResults = false;
-
-  rec.onstart = () => updateResponse('🎙️ Listening… say “AIJOE …”');
-  rec.onerror = (e) => updateResponse('Mic error: ' + e.error);
-  rec.onend = () => { listening = false; updateMicIcon(); };
-
-  rec.onresult = (e) => {
-    const transcript = e.results[e.results.length - 1][0].transcript.trim();
-    console.log('Heard:', transcript);
-    handleSpeech(transcript);
+  rec.onresult = e=>{
+    const text = e.results[0][0].transcript;
+    displayResponse("You said: " + text);
+    speak('You said ' + text);
   };
-  rec.start();
-  listening = true;
-  updateMicIcon();
+  rec.onerror = e=>{
+    displayResponse('Voice error: ' + e.error);
+  };
+}else{
+  document.getElementById('micBtn').disabled = true;
+  displayResponse('Speech Recognition not supported in this browser.');
 }
 
-function stopListening() {
-  if (rec) rec.stop();
-  listening = false;
-  updateMicIcon();
-}
-
-function toggleListening() {
-  listening ? stopListening() : startListening();
-}
-
-function updateMicIcon() {
-  const mic = document.querySelector('#micBtn, [data-ai-action="voice"]');
-  if (!mic) return;
-  mic.textContent = listening ? '🔴 Stop Listening' : '🎤 Talk to Joey';
-}
-
-// --- SPEECH HANDLER ---
-function handleSpeech(text) {
-  // very light wake‑word check
-  const lowered = text.toLowerCase();
-  if (!lowered.startsWith('aijoe')) {
-    updateResponse("(No wake‑word) Heard: " + text);
-    return;
+document.getElementById('micBtn').addEventListener('click', ()=>{
+  if(rec){
+    rec.start();
+    displayResponse('Listening...');
   }
-  const command = lowered.replace(/^aijoe\s*/, ''); // strip wake‑word
-  if (!command) { updateResponse('👋 I’m here!'); return; }
+});
 
-  // basic intent parsing demo
-  if (command.includes('music')) document.getElementById('musicBtn')?.click();
-  else if (command.includes('joke')) updateResponse('Why did the painter fall?  He lacked proper *support*! 😄');
-  else updateResponse('You said: ' + command + ' (feature coming soon)');
+function speak(text){
+  const utter = new SpeechSynthesisUtterance(text);
+  const voices = speechSynthesis.getVoices();
+  const selected = voiceSelect.value;
+  if(voices[selected]) utter.voice = voices[selected];
+  speechSynthesis.speak(utter);
 }
 
-// --- GENERIC BUTTON DISPATCHER ---
-function updateResponse(msg) {
-  const r = document.getElementById('response');
-  if (r) r.textContent = msg;
+function displayResponse(msg){
+  document.getElementById('response').innerText = msg;
 }
 
-window.addEventListener('DOMContentLoaded', () => {
-  // 1. Mic button wiring
-  const mic = document.querySelector('#micBtn, [data-ai-action="voice"]');
-  if (mic) {
-    mic.addEventListener('click', toggleListening);
-    updateMicIcon();
-  }
-
-  // 2. Music overlay (same as previous version)
-  const musicBtn = document.getElementById('musicBtn');
-  if (musicBtn) {
-    musicBtn.addEventListener('click', () => {
-      let overlay = document.getElementById('musicOverlay');
-      if (overlay) { overlay.style.display = (overlay.style.display === 'none' ? 'block' : 'none'); return; }
-
-      overlay = document.createElement('div');
-      overlay.id = 'musicOverlay';
-      Object.assign(overlay.style, {
-        position:'fixed',bottom:'1rem',right:'1rem',width:'320px',height:'180px',
-        background:'#000',borderRadius:'12px',overflow:'hidden',boxShadow:'0 4px 10px rgba(0,0,0,.3)',zIndex:10000
-      });
-      const iframe = document.createElement('iframe');
-      iframe.src = 'https://www.youtube.com/embed/videoseries?list=PLFgquLnL59amLtk5wGLwUuY8lG4IzuUyC&autoplay=1';
-      iframe.width = '320'; iframe.height = '180'; iframe.allow='autoplay'; iframe.loading='lazy'; iframe.style.border='none';
-      overlay.appendChild(iframe); document.body.appendChild(overlay);
-    });
-  }
-
-  // 3. Catch‑all for other buttons
-  document.querySelectorAll('[data-ai-action]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const act = btn.dataset.aiAction;
-      if (act === 'voice') return; // the mic already handled
-      updateResponse('Working on ' + act + '… (feature coming soon!)');
-    });
+// Placeholder actions
+document.querySelectorAll('.action').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    const action = btn.dataset.action;
+    displayResponse(action.charAt(0).toUpperCase()+action.slice(1) + ' feature coming soon!');
+    speak(action + ' feature coming soon');
   });
 });
