@@ -1,4 +1,4 @@
-// Populate voice list
+// Populate voices
 const voiceSelect = document.getElementById('voiceSelect');
 function populateVoices(){
   const voices = speechSynthesis.getVoices();
@@ -16,12 +16,9 @@ if(SpeechRecognition){
   rec.interimResults = false;
   rec.onresult = e=>{
     const text = e.results[0][0].transcript;
-    displayResponse("You said: " + text);
-    speak('You said ' + text);
+    askAI(text);
   };
-  rec.onerror = e=>{
-    displayResponse('Voice error: ' + e.error);
-  };
+  rec.onerror = e=>displayResponse('Voice error: '+e.error);
 }else{
   document.getElementById('micBtn').disabled = true;
   displayResponse('Speech Recognition not supported in this browser.');
@@ -46,11 +43,29 @@ function displayResponse(msg){
   document.getElementById('response').innerText = msg;
 }
 
-// Placeholder actions
+// Netlify Function call to OpenAI
+async function askAI(question){
+  displayResponse('Thinking...');
+  try{
+    const res = await fetch('/.netlify/functions/askAI', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({prompt:question})
+    });
+    const data = await res.json();
+    const answer = data.answer || 'Sorry, I cannot answer that.';
+    displayResponse(answer);
+    speak(answer);
+  }catch(err){
+    displayResponse('Error contacting AI.');
+    console.error(err);
+  }
+}
+
+// Placeholder buttons
 document.querySelectorAll('.action').forEach(btn=>{
   btn.addEventListener('click', ()=>{
     const action = btn.dataset.action;
-    displayResponse(action.charAt(0).toUpperCase()+action.slice(1) + ' feature coming soon!');
-    speak(action + ' feature coming soon');
+    askAI('Please help with ' + action);
   });
 });

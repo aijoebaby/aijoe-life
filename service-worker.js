@@ -1,3 +1,3 @@
-// TODO: add offline caching
-self.addEventListener('install', e=>self.skipWaiting());
-self.addEventListener('activate', e=>self.clients.claim());
+// Simple service worker to enable PWA install
+self.addEventListener('install',e=>self.skipWaiting());
+self.addEventListener('activate',e=>self.clients.claim());
