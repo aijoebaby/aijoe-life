@@ -1,12 +1,1 @@
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:system-ui,sans-serif;background:#f4f6fa;color:#222;display:flex;justify-content:center;align-items:flex-start;min-height:100vh;padding:1rem}
-#app{width:100%;max-width:420px;text-align:center}
-#joey-avatar{width:200px;height:200px;border-radius:50%;object-fit:cover;box-shadow:0 4px 12px rgba(0,0,0,.2);margin:1rem auto}
-#voice-section{margin:1rem auto;display:flex;justify-content:center;gap:.5rem}
-#micBtn{font-size:1.25rem;padding:.5rem 1rem;border:none;border-radius:9999px;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.15)}
-#voiceSelect{padding:.4rem}
-#response{margin:1rem auto;min-height:2.5rem;padding:.5rem;border:1px solid #ddd;border-radius:8px;background:#fff}
-#actions{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:.5rem;margin-top:1rem}
-.action{padding:.75rem;border:none;border-radius:12px;background:#2b6cb0;color:#fff;font-size:.9rem;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.15)}
-.action:active{transform:scale(.97)}
-footer{margin-top:1.5rem;font-size:.75rem;color:#666}
+body{font-family:system-ui,sans-serif;background:#f4f6fa;color:#222;display:flex;justify-content:center;align-items:flex-start;min-height:100vh;padding:1rem}#app{width:100%;max-width:420px;text-align:center}#joey-avatar{width:200px;height:200px;border-radius:50%;object-fit:cover;box-shadow:0 4px 12px rgba(0,0,0,.2);margin:1rem auto}#voice-section{margin:1rem auto;display:flex;justify-content:center;gap:.5rem}#micBtn{font-size:1.25rem;padding:.5rem 1rem;border:none;border-radius:9999px;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.15)}#voiceSelect{padding:.4rem}#response{margin:1rem auto;min-height:2.5rem;padding:.5rem;border:1px solid #ddd;border-radius:8px;background:#fff}#actions{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:.5rem;margin-top:1rem}.action{padding:.75rem;border:none;border-radius:12px;background:#2b6cb0;color:#fff;font-size:.9rem;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.15)}.action:active{transform:scale(.97)}

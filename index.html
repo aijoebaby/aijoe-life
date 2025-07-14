@@ -10,22 +10,12 @@
 <body>
   <main id="app">
     <h1 id="app-title">AIJOE</h1>
-
-    <!-- Joey Avatar -->
     <img src="joey-avatar.png" alt="Joey Avatar" id="joey-avatar" />
-
-    <!-- Voice section -->
     <section id="voice-section">
       <button id="micBtn" aria-label="Talk to Joey">🎤 Talk</button>
       <select id="voiceSelect" aria-label="Choose a voice"></select>
     </section>
-
-    <!-- Response display -->
-    <div id="response" role="status" aria-live="polite">
-      Ready.
-    </div>
-
-    <!-- Action buttons -->
+    <div id="response" role="status" aria-live="polite">Ready.</div>
     <nav id="actions">
       <button class="action" data-action="music">🎵 Music</button>
       <button class="action" data-action="gps">📍 GPS</button>
@@ -34,12 +24,8 @@
       <button class="action" data-action="bible">📖 Bible</button>
       <button class="action" data-action="mood">😊 Mood</button>
     </nav>
-
-    <footer>
-      <small>AIJOE will never sell your data • Your friendly AI assistant •</small>
-    </footer>
+    <footer><small>AIJOE • Your friendly AI assistant</small></footer>
   </main>
-
   <script src="script.js"></script>
 </body>
 </html>
