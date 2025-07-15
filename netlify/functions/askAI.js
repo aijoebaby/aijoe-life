@@ -1,1 +1,0 @@
-export default async (req,ctx)=>Response.json({answer:'hi'});
