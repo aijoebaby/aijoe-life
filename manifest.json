@@ -1,1 +1,1 @@
-{"name": "AIJOE", "short_name": "AIJOE", "start_url": "/index.html", "display": "standalone"}
+{"name": "AIJOE", "short_name": "AIJOE", "start_url": "/index.html", "display": "standalone", "background_color": "#000000", "theme_color": "#2b6cb0", "icons": [{"src": "joey-avatar.png", "sizes": "192x192", "type": "image/png"}]}
