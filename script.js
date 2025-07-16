@@ -1,4 +1,11 @@
-<!DOCTYPE html>
+const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+recognition.onresult = (event) => {
+  const command = event.results[0][0].transcript.toLowerCase();
+  if (command.includes("bible verse")) fetchBibleVerse();
+  else if (command.includes("joke")) tellJoke();
+  // ... (other commands)
+};
+document.getElementById('voiceButton').addEventListener('click', () => recognition.start());!DOCTYPE html>
 <html lang="en">
 <head>function fetchBibleVerse() {
   fetch('https://api.bible/verses/random') // Replace with real API key
