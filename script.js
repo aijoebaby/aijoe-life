@@ -1,4 +1,98 @@
-const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+/******************************************************************
+  AIJOE – voice + button logic  (replace entire script.js with this)
+******************************************************************/
+
+/* ---------- 1.  SPEECH SYNTHESIS (cheerful male) --------------- */
+const synth   = window.speechSynthesis;
+let   pickOne = null;          // will hold the chosen Voice object
+
+function chooseVoice() {
+  // Prefer Google US English male voices if they exist
+  const all   = synth.getVoices();
+  pickOne =
+    all.find(v => /Wavenet-D|Neural2-D/i.test(v.name)) ||     // Pixel / Chrome desktop
+    all.find(v => /Male/i.test(v.name) && v.lang.startsWith('en')) ||
+    all.find(v => v.lang.startsWith('en')) ||                 // any English fallback
+    null;
+  console.log('[AIJOE] Selected voice:', pickOne ? pickOne.name : 'default');
+}
+
+chooseVoice();
+synth.onvoiceschanged = chooseVoice;
+
+function speak(text, pitch = 1.1, rate = 1.05) {
+  try {
+    const u   = new SpeechSynthesisUtterance(text);
+    if (pickOne) u.voice = pickOne;
+    u.pitch = pitch;
+    u.rate  = rate;
+    synth.speak(u);
+  } catch (err) {
+    console.error('Speech error:', err);
+  }
+}
+
+/* ---------- 2.  BUTTON ACTIONS -------------------------------- */
+document.getElementById('musicBtn').onclick = () => {
+  window.open('https://www.youtube.com/watch?v=5qap5aO4i9A', '_blank');
+  speak('Enjoy the music!');
+};
+
+document.getElementById('gpsBtn').onclick = () =>
+  navigator.geolocation.getCurrentPosition(
+    p => speak(`Latitude ${p.coords.latitude.toFixed(2)}, longitude ${p.coords.longitude.toFixed(2)}.`),
+    () => speak('Sorry, location unavailable.')
+  );
+
+document.getElementById('weatherBtn').onclick = () =>
+  speak('Weather feature coming soon!');
+
+document.getElementById('showListBtn').onclick = () =>
+  speak('List feature coming soon!');
+
+document.getElementById('bibleBtn').onclick = () =>
+  speak('Bible verse feature coming soon!');
+
+document.getElementById('moodBtn').onclick = () =>
+  speak('I feel great today!');
+
+/* ---------- 3.  BASIC SPEECH-TO-TEXT -------------------------- */
+const micBtn = document.getElementById('micBtn');
+if (micBtn) {
+  const Rec = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!Rec) {
+    micBtn.disabled = true;
+    micBtn.textContent = '🎤 Unsupported on this browser';
+  } else {
+    micBtn.onclick = () => {
+      const rec = new Rec();
+      rec.lang = 'en-US';
+      rec.interimResults = false;
+      rec.maxAlternatives = 1;
+      rec.start();
+      document.getElementById('log').textContent = '🎙️ Listening…';
+
+      rec.onresult = e => {
+        const words = e.results[0][0].transcript.toLowerCase();
+        document.getElementById('log').textContent = 'You: ' + words;
+        /* very small command router */
+        if (words.includes('music'))      document.getElementById('musicBtn').click();
+        else if (words.includes('weather')) document.getElementById('weatherBtn').click();
+        else if (words.includes('verse'))   document.getElementById('bibleBtn').click();
+        else if (words.includes('mood'))    document.getElementById('moodBtn').click();
+        else if (words.includes('location') || words.includes('where')) document.getElementById('gpsBtn').click();
+        else speak('You said ' + words);
+      };
+
+      rec.onerror = err => {
+        console.error('Speech-to-text error:', err);
+        speak('Microphone error.');
+        document.getElementById('log').textContent = 'Error: ' + err.error;
+      };
+    };
+  }
+}
+ recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
 recognition.onresult = (event) => {
   const command = event.results[0][0].transcript.toLowerCase();
   if (command.includes("bible verse")) fetchBibleVerse();
