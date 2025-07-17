@@ -1,2 +1,3 @@
 joey-bg.png      ← big skateboard background
-joey-avatar.png  ← optional icon (not yet used here)
+joey-<body style="background-image: url('joey-bg.png');">
+  ← optional icon (not yet used here)
