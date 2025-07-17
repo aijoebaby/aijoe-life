@@ -1,9 +1,11 @@
+function startListening() {
+  document.getElementById("response").textContent = "🎙️ Listening...";
+}
 
-  const message = "This is AIJOE";
-  const speech = new SpeechSynthesisUtterance(message);
-  speech.lang = "en-US";
-  speech.pitch = 1;
-  speech.rate = 1;
-  speech.volume = 1;
-  speechSynthesis.speak(speech);
-};
+function stopListening() {
+  document.getElementById("response").textContent = "🛑 Stopped.";
+}
+
+function getBibleVerse() {
+  document.getElementById("response").textContent = "📖 For God so loved the world... (John 3:16)";
+}
